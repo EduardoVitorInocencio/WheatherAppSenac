@@ -1,6 +1,10 @@
 import sunny from '../assets/images/sunny.png'
 import { useState } from 'react'
 
+// Utilitários
+import { getWeatherInfo } from '../utils/weatherCode'
+
+
 const WheatherApp = () => {
   // GERENCIMENTO E CONTROLE DE DADOS E AÇOES
   const [data, setData] = useState(null)
@@ -38,33 +42,42 @@ const WheatherApp = () => {
   }
 
   const search = async (cityName) => {
-    try{
+    try {
       // 1. Buscar as coordenadas
       const coordinates = await getCoordinates(cityName)
-
-      // 2. Pegar a latitude e longitude
+  
+      // 2. Pegar latitude e longitude
       const { latitude, longitude } = coordinates
-
-      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto`.replace(/\s/g,'')
-
-      // 4. Buscar Clima
+  
+      // 3. Buscar o clima
+      const url = `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current=temperature_2m,relative_humidity_2m,wind_speed_10m,weather_code&timezone=auto`
+  
       const response = await fetch(url)
-
-      const data = await response.json()
-      
+      const weatherData = await response.json()
+  
+      // 4. Traduzir o weather code
+      const weatherInfo = getWeatherInfo(
+        weatherData.current.weather_code
+      )
+  
       console.log('Clima:')
-      console.log(data.current)
-
-      // 5. Salvar os dados obtidos pela API no estado data
+      console.log(weatherData.current)
+      console.log('Informações:', weatherInfo)
+  
+      // 5. Salvar no estado
       setData({
-        ...data.current,
+        temperature: weatherData.current.temperature_2m,
+        humidity: weatherData.current.relative_humidity_2m,
+        windSpeed: weatherData.current.wind_speed_10m,
+        weatherCode: weatherData.current.weather_code,
+  
         city: coordinates.name,
         country: coordinates.country,
-        wheatherType: data.type,
-        whetherDescription: data.description
+  
+        weatherType: weatherInfo.type,
+        weatherDescription: weatherInfo.description
       })
-
-
+  
     } catch (error) {
       console.log(error.message)
     }
@@ -77,7 +90,11 @@ const WheatherApp = () => {
         <div className="search">
           <div className="search-top">
             <i className="fa-solid fa-location-dot"></i>
-            <div className="location">London</div>
+            
+            <div className="location">
+              {data ? data.city : "Search a city"}
+            </div>
+
           </div>
 
           <div className="search-bar">
@@ -94,9 +111,16 @@ const WheatherApp = () => {
 
         <div className="weather">
           <img src={sunny} alt="Clear sky" />
-          <div className="weather-type">Clear</div>
-          <div className="temp">28°</div>
+
+          <div className="weather-type">
+            {data ? data.weatherDescription : '--'}
+          </div>
+
+          <div className="temp">
+            {data ? `${Math.round(data.temperature)}°` : '--'}
+          </div>
         </div>
+
 
         <div className="weather-date">
           <p>Sat, 15 Ago</p>
@@ -106,13 +130,17 @@ const WheatherApp = () => {
           <div className="humidity">
             <div className="data-name">Humidity</div>
             <i className="fa-solid fa-droplet"></i>
-            <div className="data">35%</div>
+            <div className="data">
+              {data ? `${data.humidity}%` : '--'}
+            </div>
           </div>
 
           <div className="wind">
             <div className="data-name">Wind</div>
             <i className="fa-solid fa-wind"></i>
-            <div className="data">3 km/h</div>
+            <div className="data">
+              {data ? `${data.windSpeed} km/h` : '--'}
+            </div>
           </div>
         </div>
       </div>
