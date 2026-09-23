@@ -1,4 +1,8 @@
 import sunny from '../assets/images/sunny.png'
+import cloudy from '../assets/images/cloudy.png'
+import rainy from '../assets/images/rainy.png'
+import snowy from '../assets/images/snowy.png'
+
 import { useState } from 'react'
 
 // Utilitários
@@ -41,6 +45,13 @@ const WheatherApp = () => {
     }
   }
 
+  const weatherImages = {
+    sunny,
+    cloudy,
+    rainy,
+    snowy
+  }
+
   const search = async (cityName) => {
     try {
       // 1. Buscar as coordenadas
@@ -59,10 +70,13 @@ const WheatherApp = () => {
       const weatherInfo = getWeatherInfo(
         weatherData.current.weather_code
       )
+
+      // 4. Escolher imagem
+      const weatherImage = weatherImages[weatherInfo.type]
   
-      console.log('Clima:')
-      console.log(weatherData.current)
+      console.log('Clima:', weatherData.current)
       console.log('Informações:', weatherInfo)
+      console.log('Imagem:', weatherImage)
   
       // 5. Salvar no estado
       setData({
@@ -75,7 +89,9 @@ const WheatherApp = () => {
         country: coordinates.country,
   
         weatherType: weatherInfo.type,
-        weatherDescription: weatherInfo.description
+        weatherDescription: weatherInfo.description,
+  
+        weatherImage: weatherImage
       })
   
     } catch (error) {
@@ -110,7 +126,11 @@ const WheatherApp = () => {
         </div>
 
         <div className="weather">
-          <img src={sunny} alt="Clear sky" />
+        <img
+          src={data ? data.weatherImage : sunny}
+          alt={data ? data.weatherDescription : 'Weather'}
+        />
+
 
           <div className="weather-type">
             {data ? data.weatherDescription : '--'}
